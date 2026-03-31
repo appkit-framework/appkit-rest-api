@@ -10,10 +10,13 @@ use AppKit\Http\Server\Router\HttpRouter;
 class RestApiRouterMiddleware implements ServerHttpMiddlewareInterface {
     private $setupRoutesCallback;
 
+    private $log;
     private $router;
 
-    function __construct($setupRoutesCallback) {
+    function __construct($log, $setupRoutesCallback) {
         $this -> setupRoutesCallback = $setupRoutesCallback;
+
+        $this -> log = $log -> withModule(static::class);
     }
 
     public function processRequest($request, $next) {
@@ -21,6 +24,14 @@ class RestApiRouterMiddleware implements ServerHttpMiddlewareInterface {
             $this -> router = new HttpRouter($this -> setupRoutesCallback);
 
         [$match, $handler, $params, $extra, $allow] = $this -> router -> matchRequest($request);
+
+        $this -> log -> debug(
+            'Matched request',
+            [
+                'requestPath' => $request -> getPath(),
+                'match' => $match
+            ]
+        );
 
         if($match == HttpRouter::NOT_FOUND)
             throw new RestApiError(

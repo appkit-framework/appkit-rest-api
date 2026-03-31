@@ -16,9 +16,12 @@ class RestApiResource extends AbstractHttpResource {
         parent::__construct($log -> withModule(static::class));
 
         $this -> pipeline -> addMiddleware(
-            new RestApiRouterMiddleware(function($routeCollector) {
-                $this -> collectRoutes($routeCollector);
-            })
+            new RestApiRouterMiddleware(
+                $this -> log,
+                function($routeCollector) {
+                    $this -> collectRoutes($routeCollector);
+                }
+            )
         );
 
         $this -> errorHandlerMw -> setErrorHandler(
