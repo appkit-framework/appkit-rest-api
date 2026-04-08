@@ -21,9 +21,12 @@ class RestApiRouterMiddleware implements ServerHttpMiddlewareInterface {
 
     public function processRequest($request, $next) {
         if(! $this -> router)
-            $this -> router = new HttpRouter($this -> setupRoutesCallback);
+            $this -> router = new HttpRouter(
+                $this -> setupRoutesCallback,
+                HttpRouter::TS_LOOSE
+            );
 
-        [$match, $handler, $params, $extra, $allow] = $this -> router -> matchRequest($request);
+        [$match, $result, $params, $extra] = $this -> router -> matchRequest($request);
 
         $this -> log -> debug(
             'Matched request',
@@ -44,11 +47,11 @@ class RestApiRouterMiddleware implements ServerHttpMiddlewareInterface {
                 405,
                 'METHOD_NOT_ALLOWED',
                 'Method not allowed',
-                [ 'allowedMethods' => $allow ],
-                [ 'Allow' => $allow ]
+                [ 'allowedMethods' => $result ],
+                [ 'Allow' => $result ]
             );
 
-        $request -> setAttribute('routeHandler', $handler)
+        $request -> setAttribute('routeHandler', $result)
             -> setAttribute('routeParams', $params)
             -> setAttribute('routeExtra', $extra);
 
